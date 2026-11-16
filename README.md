@@ -411,6 +411,22 @@ Do not commit API keys, credentials, or environment-specific configuration files
 
 Refer to the example configuration files when available.
 
+## Web Client
+
+The project includes a simple HTML-based WebRTC test client.
+
+The client connects to the Signaling Server through a WebSocket connection and allows you to test WebRTC audio communication with the Voice AI Gateway.
+
+### Configuration
+
+Open `client/index.html` in a web browser.
+
+Before connecting, enter the Signaling Server address in the **Server** field.
+
+```text
+<SIGNALING_SERVER_IP>:8080
+```
+
 ## Project Status
 
 Voice AI Gateway is an actively developed project.

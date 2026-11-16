@@ -257,6 +257,15 @@ Navigate to the `agent_server` directory:
 
 ```bash
 cd agent_server
+
+python3 -m venv venv
+source venv/bin/activate
+pip install grpcio grpcio-tools
+python -m grpc_tools.protoc \
+    -I../proto \
+    --python_out=. \
+    --grpc_python_out=. \
+    ../proto/voice_agent.proto
 ```
 
 Activate the Python virtual environment:

@@ -546,7 +546,7 @@ This project is licensed under the Apache License 2.0.
 
 See [LICENSE](LICENSE) for details.
 
-Third-party components and dependencies retain their respective licenses and copyright notices. Refer to `THIRD_PARTY_NOTICES.md` for applicable third-party license information.
+Third-party components and dependencies retain their respective licenses and copyright notices. Refer to  [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for applicable third-party license information.
 
 ## Acknowledgements
 

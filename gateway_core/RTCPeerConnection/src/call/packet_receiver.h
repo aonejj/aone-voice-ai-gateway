@@ -1,0 +1,73 @@
+/*
+ *  Copyright (c) 2018 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
+#ifndef CALL_PACKET_RECEIVER_H_
+#define CALL_PACKET_RECEIVER_H_
+
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "absl/base/nullability.h"
+#include "absl/functional/any_invocable.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
+#include "api/media_types.h"
+#include "rtc_base/copy_on_write_buffer.h"
+
+namespace webrtc {
+
+class PacketReceiver {
+ public:
+  enum DeliveryStatus {
+    DELIVERY_OK,
+    DELIVERY_UNKNOWN_SSRC,
+    DELIVERY_PACKET_ERROR,
+  };
+
+/*
+  typedef std::function<
+	  void(DeliveryStatus, MediaType, rtc::CopyOnWriteBuffer, int64_t)>
+	  PacketCallback;
+
+  virtual void DeliverPacketAsync(MediaType media_type,
+	  rtc::CopyOnWriteBuffer packet,
+	  int64_t packet_time_us,
+	  PacketCallback callback) {
+	  DeliveryStatus status = DeliverPacket(media_type, packet, packet_time_us);
+	  if (callback)
+		  callback(status, media_type, std::move(packet), packet_time_us);
+  }
+*/
+
+  virtual void DeliverRtcpPacket(MediaType media_type, rtc::CopyOnWriteBuffer packet) = 0;
+
+   using OnUndemuxablePacketHandler =
+      absl::AnyInvocable<bool(const RtpPacketReceived& parsed_packet)>; 
+
+//  virtual DeliveryStatus DeliverPacket(MediaType media_type,
+//                                       rtc::CopyOnWriteBuffer packet,
+//                                       int64_t packet_time_us) = 0;
+
+  // Can be called on the network thread or the worker thread.
+  // If `media_type` is not Audio or Video, packets may be used for BWE
+  // calculations but are not demuxed.
+  virtual void DeliverRtpPacket(MediaType media_type,
+                                RtpPacketReceived packet,
+                                int64_t packet_time_us,
+                                absl_nonnull OnUndemuxablePacketHandler
+                                    undemuxable_packet_handler) = 0;                                       
+
+ protected:
+  virtual ~PacketReceiver() {}
+};
+
+}  // namespace webrtc
+
+#endif  // CALL_PACKET_RECEIVER_H_

@@ -1,0 +1,65 @@
+import("alog.gni")
+
+group("ALog") {
+    deps = [
+        ":libalog",
+    ]
+}
+
+config("ALogConfig") {
+    defines = [ 
+        "FAKE_LOG_DEVICE",
+        "__unused=__attribute__((unused))",
+    ]
+
+    include_dirs = [
+        "./include",
+    ]
+
+    cflags_cc = [
+        "-Wno-multichar",
+        "-fno-use-cxa-atexit",
+        "-fPIC"
+    ]
+}
+
+config("ALogLinkConfig") {
+    ldflags = [
+        "-Wl,-Bsymbolic",
+        "-Wl,--no-undefined",
+    ]
+    
+    lib_dirs = [
+        "$root_out_dir",
+    ]   
+}
+
+alog_source_set("alog_sources") {
+    sources = [
+        "liblog/config_read.cpp",
+        "liblog/config_write.cpp",
+        "liblog/fake_log_device.cpp",
+        "liblog/fake_writer.cpp",
+        "liblog/log_event_list.cpp",
+        "liblog/log_event_write.cpp",
+        "liblog/log_time.cpp",
+        "liblog/logger_lock.cpp",
+        "liblog/logger_name.cpp",
+        "liblog/logger_read.cpp",
+        "liblog/logger_write.cpp",
+        "liblog/logprint.cpp",
+        "liblog/pmsg_reader.cpp",
+        "liblog/pmsg_writer.cpp",
+        "liblog/stderr_write.cpp",        
+    ]
+}
+
+alog_shared_library("libalog") {
+    deps = [
+        ":alog_sources",
+    ]
+
+    libs = [
+        "pthread",
+    ]    
+}

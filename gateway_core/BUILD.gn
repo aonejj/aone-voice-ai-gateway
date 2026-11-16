@@ -1,0 +1,15 @@
+# Copyright (c) 2024 The AONE SFU project authors.
+
+group("default") {
+    deps = [
+        "ALog",
+        "GRPCAgentClient",
+        "RTCCodec",
+        "RTCPeerConnection",
+        "RTCAudioUtils",
+        "RTCClient",
+        "RTCSignalingSession",
+        "RTCVoiceGateway",
+        "RTCVoiceGatewayTestExec",
+    ]
+}

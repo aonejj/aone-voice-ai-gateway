@@ -1,0 +1,40 @@
+# Copyright (c) 2024 The AONE SFU project authors.
+
+rtc_client_root = get_path_info(".", "abspath")
+rtc_client_configs = [ rtc_client_root + ":RTCClientConfig" ]
+rtc_client_link_configs = [ rtc_client_root + ":RTCClientLinkConfig" ]
+
+
+set_defaults("rtc_client_source_set") {
+    configs = rtc_client_configs
+}
+
+set_defaults("rtc_client_shared_library") {
+    configs = rtc_client_link_configs    
+}
+
+template("rtc_client_source_set") {
+  source_set(target_name) {
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                            "configs", 
+                           ])
+    if (defined(invoker.configs)) {
+      configs += invoker.configs
+    }
+  }    
+}
+
+template("rtc_client_shared_library") {
+  shared_library(target_name) {
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                             "configs",
+                           ])
+    if (defined(invoker.configs)) {
+      configs += invoker.configs
+    }
+  }    
+}

@@ -1,0 +1,78 @@
+# Copyright (c) 2024 The AONE SFU project authors
+import("rtc_audio_utils.gni")
+
+group("RTCAudioUtils") {
+    deps = [
+        ":librtc_audio_utils",
+    ]
+}
+
+config("RTCAudioUtilsConfig") {
+    defines = [
+        "DCHECK_ALWAYS_ON",
+        "__unused=__attribute__((unused))",
+    ]
+
+    if(is_linux) {
+        defines += [
+            "WEBRTC_LINUX",
+            "WEBRTC_POSIX",
+        ]
+    }
+
+    include_dirs = [
+        ".",
+        "../ALog/include",
+        "../RTCPeerConnection/src",
+        "../RTCPeerConnection/third_party/abseil/abseil-cpp",
+    ]
+
+    cflags_cc = [
+        "-Wno-multichar",
+        "-fno-use-cxa-atexit",
+    ]    
+}
+
+config("RTCAudioUtilsLinkConfig") {
+    ldflags = [
+        "-Wl,-rpath=\$ORIGIN",        
+        "-Wl,-Bsymbolic",
+        "-Wl,--no-undefined",
+    ]
+
+    lib_dirs = [
+        "$root_out_dir",
+    ]
+
+    libs = [
+        "rtc_peerconnection", 
+        "alog",
+    ]
+}
+
+rtc_audio_utils_source_set("RTCAudioResampler") {
+    sources = [
+        "RTCAudioResampler.cc",
+        "RTCAudioResampler.h"
+    ]
+}
+
+rtc_audio_utils_source_set("RTCAudioChannelConverter") {
+    sources = [
+        "RTCAudioChannelConverter.cc",
+        "RTCAudioChannelConverter.h"
+    ]
+}
+
+
+rtc_audio_utils_shared_library("librtc_audio_utils") {
+    deps = [
+        ":RTCAudioResampler",
+        ":RTCAudioChannelConverter",
+    ]
+
+    data_deps = [
+        "../RTCPeerConnection:librtc_peerconnection",
+        "../ALog:libalog",
+    ]
+}

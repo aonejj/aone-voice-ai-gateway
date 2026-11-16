@@ -1,0 +1,99 @@
+import("rtc_signaling_session.gni")
+
+group("RTCSignalingSession") {
+    deps = [
+        ":librtc_signaling_session",
+    ]
+}
+
+config("RTCSignalingSessionConfig") {
+    defines = [
+        "DCHECK_ALWAYS_ON",
+        "__unused=__attribute__((unused))",
+    ]
+
+    include_dirs = [
+        ".",
+        "../ALog/include",
+        "../RTCSignalingSessionInterface",
+        "../RTCIceInfo",
+        "/usr/local/include",
+    ]
+
+    cflags_cc = [
+        "-Wno-multichar",
+        "-fno-use-cxa-atexit",
+    ]    
+}
+
+config("RTCSignalingSessionLinkConfig") {
+    ldflags = [
+        "-Wl,-rpath=\$ORIGIN",        
+        "-Wl,-Bsymbolic",
+        "-Wl,--no-undefined",
+    ]
+
+    lib_dirs = [
+        "$root_out_dir",
+        "/usr/local/lib",
+    ]
+
+    libs = [ 
+        "alog",
+        "websockets",
+        "crypto",
+        "ssl",
+        "jansson",
+    ]
+}
+
+rtc_signaling_session_source_set("RTCSignalingSessionImpl") {
+    sources = [
+        "RTCSignalingSessionImpl.cc",
+        "RTCSignalingSessionImpl.h",
+        "../RTCLooper/RTCLooper.h",
+        "../RTCLooper/RTCHandler.h",
+    ]
+
+    deps = [
+        ":RTCWebSocketClient",
+        ":RTCWebSocketClientListener",
+    ]
+}
+
+rtc_signaling_session_source_set("RTCWebSocketClient") {
+    sources = [
+        "RTCWebSocketClient.cc",
+        "RTCWebSocketClient.h",
+    ]
+
+    deps = [
+        ":RTCWebSocketClientListener",
+    ]
+}
+
+rtc_signaling_session_source_set("RTCWebSocketClientListener") {
+    public = [
+        "RTCWebSocketClientListener.h",
+    ]
+}
+
+rtc_signaling_session_source_set("RTCSignalingSessionCtrl") {
+    sources = [
+        "RTCSignalingSessionCtrl.cc",
+        "./include/RTCSignalingSessionCtrl.h",
+    ]
+}
+
+rtc_signaling_session_shared_library("librtc_signaling_session") {
+    deps = [
+        ":RTCWebSocketClientListener",
+        ":RTCWebSocketClient",
+        ":RTCSignalingSessionImpl",
+        ":RTCSignalingSessionCtrl",
+    ]
+
+    data_deps = [
+        "../ALog:libalog",
+    ]
+}

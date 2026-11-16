@@ -1,0 +1,95 @@
+# Copyright (c) 2024 The AONE SFU project authors
+import("rtc_codec.gni")
+
+group("RTCCodec") {
+    deps = [
+        ":librtc_codec",
+    ]
+}
+
+config("RTCCodecConfig") {
+    include_dirs = [
+        ".",
+        "../ALog/include",
+#        "/usr/include",  # opus_dev
+        "/usr/local/include",   # opus build
+    ]
+
+    cflags_cc = [
+        "-Wno-multichar",
+        "-fno-use-cxa-atexit",
+    ]    
+}
+
+config("RTCCodecLinkConfig") {
+    ldflags = [
+        "-Wl,-rpath=\$ORIGIN",        
+        "-Wl,-Bsymbolic",
+        "-Wl,--no-undefined",
+    ]
+
+    lib_dirs = [
+        "$root_out_dir",
+#        "/usr/lib/x86_64-linux-gnu/",   # opus_dev
+        "/usr/local/lib",
+    ]
+
+    libs = [ 
+        "alog",
+        "opus",
+    ]
+}
+
+rtc_codec_source_set("RTCCodecInterface") {
+    public = [
+        "RTCCodecInterface.h",
+    ]    
+}
+
+rtc_codec_source_set("RTCCodecFactory") {
+    sources = [
+        "RTCCodecFactory.cc",
+        "RTCCodecFactory.h",
+    ]
+
+    deps = [
+        ":RTCCodecInterface",
+        ":RTCOpusDecoder",
+        ":RTCOpusEncoder",
+    ]
+}
+
+rtc_codec_source_set("RTCOpusDecoder") {
+    sources = [
+        "./opus/RTCOpusDecoder.cc",
+        "./opus/RTCOpusDecoder.h",
+    ]
+
+    deps = [
+        ":RTCCodecInterface",
+    ]
+}
+
+rtc_codec_source_set("RTCOpusEncoder") {
+    sources = [
+        "./opus/RTCOpusEncoder.cc",
+        "./opus/RTCOpusEncoder.h",
+    ]
+
+    deps = [
+        ":RTCCodecInterface",
+    ]
+}
+
+rtc_codec_shared_library("librtc_codec") {
+    deps = [
+        ":RTCCodecInterface",
+        ":RTCCodecFactory",
+        ":RTCOpusDecoder",
+        ":RTCOpusEncoder",
+    ]
+
+    data_deps = [
+        "../ALog:libalog",
+    ]
+}

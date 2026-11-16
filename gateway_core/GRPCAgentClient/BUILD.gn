@@ -1,0 +1,55 @@
+if (is_debug) {
+  _build_type = "Debug"
+} else {
+  _build_type = "RelWithDebInfo"
+}
+
+_cmake_build_dir = "$root_out_dir/grpc_agent_client"
+_lib_file = "$root_out_dir/libgrpc_agent_client.so"
+
+action("grpc_agent_client_build") {
+  script = "build_grpc_agent_client.py"
+
+  sources = [
+    "../../proto/voice_agent.proto",
+    "CMakeLists.txt",
+    "GRPCAgentChannel.cc",
+    "GRPCAgentChannel.h",
+    "GRPCAgentChannelManager.cc",
+    "GRPCAgentChannelManager.h",
+    "GRPCAgentSessionAPI.cc",
+    "GRPCAgentStream.cc",
+    "GRPCAgentStream.h",
+    "GRPCCQInterface.h",
+    "GRPCCQTag.h",
+    "GRPCChannelInterface.h",
+    "GRPCCompleteQueue.cc",
+    "GRPCCompleteQueue.h",
+    "./include/GRPCAgentSessionAPI.h",
+  ]
+
+  outputs = [ _lib_file ]
+  args = [
+    "--src-dir",
+    rebase_path("//GRPCAgentClient", root_build_dir),
+    "--build-dir",
+    rebase_path(_cmake_build_dir, root_build_dir),
+    "--lib-out-dir",
+    rebase_path(root_out_dir, root_build_dir),
+    "--build-type",
+    _build_type,
+    "--output",
+    rebase_path(_lib_file, root_build_dir),
+  ]
+}
+
+config("grpc_agent_client_config") {
+  include_dirs = [ "//GRPCAgentClient/include" ]
+  lib_dirs = [ root_out_dir ]
+  libs = [ "grpc_agent_client" ]
+}
+
+group("GRPCAgentClient") {
+  public_configs = [ ":grpc_agent_client_config" ]
+  deps = [ ":grpc_agent_client_build" ]
+}

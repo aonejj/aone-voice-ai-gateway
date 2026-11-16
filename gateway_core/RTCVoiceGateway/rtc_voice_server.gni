@@ -1,0 +1,37 @@
+rtc_voice_server_root = get_path_info(".", "abspath")
+rtc_voice_server_config =  [ rtc_voice_server_root + ":RTCVoiceServerConfig" ]
+rtc_voice_link_configs = [ rtc_voice_server_root + ":RTCVoiceServerLinkConfig" ]
+
+set_defaults("rtc_voice_server_source_set") {
+    configs = rtc_voice_server_config
+}
+
+set_defaults("rtc_voice_server_shared_library") {
+    configs = rtc_voice_link_configs    
+}
+
+template("rtc_voice_server_source_set") {
+  source_set(target_name) {
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                            "configs", 
+                           ])
+    if (defined(invoker.configs)) {
+      configs += invoker.configs
+    }
+  }    
+}
+
+template("rtc_voice_server_shared_library") {
+  shared_library(target_name) {
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                             "configs",
+                           ])
+    if (defined(invoker.configs)) {
+      configs += invoker.configs
+    }
+  }    
+}

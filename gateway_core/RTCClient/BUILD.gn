@@ -1,0 +1,176 @@
+# Copyright (c) 2024 The AONE SFU project authors
+import("rtc_peer_client.gni")
+
+group("RTCClient") {
+    deps = [
+        ":librtc_client",
+    ]
+}
+
+config("RTCClientConfig") {
+    defines = [
+        "DCHECK_ALWAYS_ON",
+        "__unused=__attribute__((unused))",
+    ]
+
+    if(is_linux) {
+        defines += [
+            "WEBRTC_LINUX",
+            "WEBRTC_POSIX",
+        ]
+    }
+
+    include_dirs = [
+        ".",
+        "../ALog/include",
+    ]
+    
+    include_dirs += [
+        "../RTCPeerConnection/src",
+        "../RTCPeerConnection/third_party/abseil/abseil-cpp",
+    ]
+
+    cflags_cc = [
+        "-Wno-multichar",
+        "-fno-use-cxa-atexit",
+    ]
+} 
+
+config("RTCClientLinkConfig") {
+    ldflags = [
+        "-Wl,-rpath=\$ORIGIN",        
+        "-Wl,-Bsymbolic",
+        "-Wl,--no-undefined",
+    ]
+
+    lib_dirs = [
+        "$root_out_dir",
+    ]
+
+    libs = [ 
+        "rtc_peerconnection",
+        "alog",
+    ]
+}
+
+rtc_client_source_set("RTCClientListener") {
+    public = [
+        "RTCClientListener.h",
+    ]    
+}
+
+rtc_client_source_set("RTCClientInterface") {
+    public = [
+        "RTCClientInterface.h",
+    ]    
+}
+
+rtc_client_source_set("RTCAudioSenderTickInterface") {
+    public = [
+        "RTCAudioSenderTickInterface.h",
+    ]    
+}
+
+rtc_client_source_set("RTCAudioSenderSchedulerInterface") {
+    public = [
+        "RTCAudioSenderSchedulerInterface.h",
+    ]    
+}
+
+rtc_client_source_set("RTCClientFactory") {
+    sources = [
+        "RTCClientFactory.cc",
+        "RTCClientFactory.h",
+    ]
+
+    deps = [
+        ":RTCClientListener",
+        ":RTCClientInterface",
+        ":RTCClientImpl",
+    ]       
+}
+
+rtc_client_source_set("RTCClientImpl") {
+    sources = [
+        "RTCClientImpl.cc",
+        "RTCClientImpl.h",
+    ]
+
+    deps = [
+        ":RTCClientListener",
+        ":RTCClientInterface",
+        ":RTCAudioSenderSchedulerInterface",
+        ":RTCClientAudioRtpReceiver",
+        ":RTCClientAudioSender",
+    ]       
+}
+
+rtc_client_source_set("RTCClientAudioRtpReceiver") {
+    sources = [
+        "RTCClientAudioRtpReceiver.cc",
+        "RTCClientAudioRtpReceiver.h",
+    ]
+
+    deps = [
+        ":RTCClientRtpReceiverInterface",
+        ":RTCClientInterface",
+    ]       
+}
+
+rtc_client_source_set("RTCClientRtpReceiverInterface") {
+    public = [
+        "RTCClientRtpReceiverInterface.h",
+    ]    
+}
+
+rtc_client_source_set("RTCClientAudioSender") {
+    sources = [
+        "RTCClientAudioSender.cc",
+        "RTCClientAudioSender.h",
+    ]
+
+    deps = [
+        ":RTCClientInterface",
+        ":RTCAudioSenderTickInterface",
+    ]       
+}
+
+rtc_client_source_set("RTCIngressAudioPacketSinkInterface") {
+    public = [
+        "RTCIngressAudioPacketSinkInterface.h",
+    ]
+}
+
+rtc_client_source_set("RTCEgressAudioSourceInterface") {
+    public = [
+        "RTCEgressAudioSourceInterface.h",
+    ]
+}
+
+rtc_client_source_set("RTCAudioOuterSetInterface") {
+    public = [
+        "RTCAudioOuterSetInterface.h",
+    ]
+}
+
+rtc_client_shared_library("librtc_client") {
+    deps = [
+        ":RTCClientListener",
+        ":RTCClientInterface",
+        ":RTCAudioSenderTickInterface",
+        ":RTCAudioSenderSchedulerInterface",
+        ":RTCClientFactory",
+        ":RTCClientImpl",
+        ":RTCClientAudioRtpReceiver",
+        ":RTCClientAudioSender",
+        ":RTCClientRtpReceiverInterface",
+        ":RTCIngressAudioPacketSinkInterface",
+        ":RTCEgressAudioSourceInterface",
+        ":RTCAudioOuterSetInterface",        
+    ]
+
+    data_deps = [
+        "../RTCPeerConnection:librtc_peerconnection",
+        "../ALog:libalog",
+    ]
+}

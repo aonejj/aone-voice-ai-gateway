@@ -1,0 +1,183 @@
+import("rtc_voice_server.gni")
+
+group("RTCVoiceGateway") {
+    deps = [
+        ":librtc_voice_server",
+    ]
+}
+
+config("RTCVoiceServerConfig") {
+    defines = [
+        "DCHECK_ALWAYS_ON",
+        "__unused=__attribute__((unused))",
+    ]
+       
+    include_dirs = [
+        ".",
+        "../ALog/include",
+        "../RTCSignalingSessionInterface",
+        "../RTCIceInfo",        
+    ]
+    
+    include_dirs += [
+        "../RTCPeerConnection/src",
+        "../RTCPeerConnection/third_party/abseil/abseil-cpp",
+    ]
+
+    include_dirs += [
+        "../RTCClient",
+        "../GRPCAgentClient/include",
+    ]    
+
+    cflags_cc = [
+        "-Wno-multichar",
+        "-fno-use-cxa-atexit",
+    ]    
+}
+
+config("RTCVoiceServerLinkConfig") {
+    ldflags = [
+        "-Wl,-rpath=\$ORIGIN",        
+        "-Wl,-Bsymbolic",
+        "-Wl,--no-undefined",
+    ]
+
+    lib_dirs = [
+        "$root_out_dir",
+    ]
+
+    libs = [ 
+        "rtc_peerconnection",
+        "alog",
+        "rtc_client",
+        "rtc_signaling_session",
+        "rtc_codec",
+        "rtc_audio_utils",
+        "grpc_agent_client",
+    ]
+}
+
+rtc_voice_server_source_set("RTCVoiceServerCtrl") {
+    sources = [
+        "RTCVoiceServerCtrl.cc",
+        "./include/RTCVoiceServerCtrl.h",
+    ]
+}
+
+rtc_voice_server_source_set("RTCVoiceServer") {
+    sources = [
+        "RTCVoiceServer.cc",
+        "RTCVoiceServer.h",
+    ]
+    
+    deps = [
+        ":RTCVoiceClient",
+    ]
+}
+
+rtc_voice_server_source_set("RTCVoiceClient") {
+    sources = [
+        "RTCVoiceClient.cc",
+        "RTCVoiceClient.h",
+    ]
+
+    deps = [
+        "../RTCClient:RTCClientInterface",
+        ":AgentClientInterface",
+    ]
+}
+
+rtc_voice_server_source_set("RTCAudioTickScheduler") {
+    sources = [
+        "RTCAudioTickScheduler.cc",
+        "RTCAudioTickScheduler.h",
+    ]
+
+    deps = [
+        "../RTCClient:RTCAudioSenderSchedulerInterface",
+    ]
+}
+
+rtc_voice_server_source_set("AgentClientInterface") {
+    public = [
+        "../RTCAgentBridge/AgentClientInterface.h",
+    ]
+     
+    deps = [
+        "../RTCClient:RTCIngressAudioPacketSinkInterface",
+        "../RTCClient:RTCEgressAudioSourceInterface",
+    ]
+}
+
+rtc_voice_server_source_set("AgentEgressAudioSinkInterface") {
+    public = [
+        "../RTCAgentBridge/AgentEgressAudioSinkInterface.h",
+    ]
+}
+
+rtc_voice_server_source_set("AgentClient") {
+    sources = [
+        "../RTCAgentBridge/AgentClient.cc",
+        "../RTCAgentBridge/AgentClient.h",
+    ]
+
+    deps = [
+        ":AgentEgressAudioSinkInterface",
+        ":AgentClientInterface",
+        "../RTCClient:RTCIngressAudioPacketSinkInterface",
+        "../RTCClient:RTCEgressAudioSourceInterface",
+    ]
+}
+
+rtc_voice_server_source_set("AgentFactory") {
+    sources = [
+        "../RTCAgentBridge/AgentFactory.cc",
+        "../RTCAgentBridge/AgentFactory.h",
+    ]
+
+    deps = [
+        ":AgentClientInterface",
+    ]
+}
+
+rtc_voice_server_source_set("AgentPcmRingBuffer") {
+    sources = [
+        "../RTCAgentBridge/AgentPcmRingBuffer.cc",
+        "../RTCAgentBridge/AgentPcmRingBuffer.h",
+    ]
+}
+
+rtc_voice_server_source_set("RTCVad") {
+    sources = [
+        "../RTCVad/RTCVADWebrtcLegacy.cc",
+        "../RTCVad/RTCVADWebrtcLegacy.h",
+        "../RTCVad/RTCVADFactory.cc",
+        "../RTCVad/RTCVADFactory.h",
+        "../RTCVad/RTCVADInterface.h",
+    ]
+}
+
+
+
+rtc_voice_server_shared_library("librtc_voice_server") {
+    deps = [
+        ":RTCVoiceClient",
+        ":RTCVoiceServer",
+        ":RTCAudioTickScheduler",
+        ":RTCVoiceServerCtrl",
+        ":AgentClientInterface",
+        ":AgentEgressAudioSinkInterface",
+        ":AgentClient",
+        ":AgentFactory",
+        ":AgentPcmRingBuffer",
+        ":RTCVad",
+    ]
+
+    data_deps = [
+        "../RTCClient:librtc_client",
+        "../RTCSignalingSession:librtc_signaling_session",
+        "../GRPCAgentClient",
+        "../RTCAudioUtils:librtc_audio_utils",
+        "../RTCCodec:librtc_codec",
+    ]
+}

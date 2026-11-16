@@ -1,0 +1,61 @@
+import("rtc_voice_gateway_exec.gni")
+
+group("RTCVoiceGatewayTestExec") {
+    deps = [
+        ":RTCVoiceGatewayTestExecute",
+    ]
+}
+
+config("RTCVoiceGatewayExecConfig") {
+    defines = [
+        "DCHECK_ALWAYS_ON",
+        "__unused=__attribute__((unused))",
+    ]
+
+    include_dirs = [
+        ".",
+        "../RTCSignalingSessionInterface",
+        "../RTCVoiceGateway/include",
+        "../RTCSignalingSession/include",
+    ]
+    
+    cflags_cc = [
+        "-Wno-multichar",
+        "-fno-use-cxa-atexit",
+    ]   
+}
+
+config("RTCVoiceGatewayExec_ExecConfig") {
+    ldflags = [
+        "-Wl,-rpath=\$ORIGIN",
+        "-Wl,-Bsymbolic",
+        "-Wl,--no-undefined",
+    ]
+
+    lib_dirs = [
+        "$root_out_dir",
+        "/usr/local/lib",
+    ]
+
+    libs = [
+        "alog",
+        "rtc_peerconnection",
+        "rtc_client",
+        "rtc_signaling_session",
+        "rtc_voice_server",
+        "crypto",
+        "ssl",
+        "websockets",
+        "jansson",
+    ]     
+}
+
+rtc_server_node_exec_executable("RTCVoiceGatewayTestExecute") {
+    sources = [
+        "RTCVoiceGatewayExec.cc",
+    ]
+
+    deps = [
+         "../RTCVoiceGateway:librtc_voice_server",
+    ]
+}

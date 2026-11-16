@@ -1,0 +1,41 @@
+# Copyright (c) 2024 The AONE SFU project authors.
+
+import("../rtc_peerconnection.gni")
+
+group("rtc_thread_provider") {
+    deps = [
+        ":RTCThreadManager",
+        ":RTCThreadManagerPool",
+    ]
+}
+
+rtc_source_set("RTCThreadManager") {
+    sources = [
+        "RTCThreadManager.cc",
+        "RTCThreadManager.h",
+    ]
+
+    deps = [
+        "../src/rtc_base:logging",
+        "../src/rtc_base:checks",
+        "../src/rtc_base:threading",        
+        "../rtc_pc_src:RTCThreadManagerInterface",
+        "../rtc_pc_src:RTCInvocableMessageHandler",
+        "../rtc_pc_src:RTCFunctionTracer",
+    ]
+}
+
+rtc_source_set("RTCThreadManagerPool") {
+    sources = [
+        "RTCThreadManagerPool.cc",
+        "RTCThreadManagerPool.h",
+    ]
+
+    deps = [
+        "../src/rtc_base:logging",
+        "../src/rtc_base:checks",
+        "../src/rtc_base:threading", 
+        ":RTCThreadManager",     
+        "../rtc_pc_src:RTCFunctionTracer",   
+    ]
+}

@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WebRTC 클라이언트 (sender)</title>
+<style>
+  :root {
+    --bg: #f6f7f8; --panel: #ffffff; --ink: #1c2330; --muted: #5d6879;
+    --line: #d8dde4; --accent: #0b6e69; --accent-ink: #ffffff; --bad: #b3261e; --ok: #1b7a3a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161c; --panel: #1a2029; --ink: #e4e8ee; --muted: #93a0b2;
+      --line: #2c3544; --accent: #3cb4ab; --accent-ink: #08201e; --bad: #ff8a80; --ok: #6fd48c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", "Noto Sans KR", sans-serif;
+  }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.lede { margin: 0 0 20px; color: var(--muted); max-width: 70ch; }
+  section {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+    padding: 16px; margin-bottom: 16px;
+  }
+  h2 { font-size: 15px; margin: 0 0 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; margin-bottom: 12px; }
+  .row:last-child { margin-bottom: 0; }
+  label { display: inline-flex; align-items: center; gap: 8px; }
+  input[type=text] {
+    font: inherit; color: inherit; background: transparent; width: 240px; max-width: 100%;
+    border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px;
+  }
+  button {
+    font: inherit; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+    border-radius: 4px; padding: 6px 16px; cursor: pointer;
+  }
+  button.secondary { background: transparent; color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .status { font-weight: 600; }
+  .status.on { color: var(--ok); }
+  .status.off { color: var(--bad); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .stat { border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; }
+  .stat .k { color: var(--muted); font-size: 12.5px; }
+  .stat .v { font-size: 20px; font-variant-numeric: tabular-nums; }
+  .stat .u { color: var(--muted); font-size: 12.5px; margin-left: 4px; }
+  #log {
+    height: 240px; overflow: auto; margin: 0; padding: 10px;
+    font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 4px; white-space: pre-wrap;
+  }
+  audio { display: block; margin-top: 4px; width: 100%; max-width: 420px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>WebRTC 클라이언트 (sender)</h1>
+  <p class="lede">
+    시그널링 서버의 <code>/peer</code>에 붙어 offer를 보냅니다.
+    GPT 구성과 맞추려고 audio는 sendrecv(마이크), video는 sendonly로 협상하되 카메라는 열지 않습니다.
+  </p>
+
+  <section>
+    <h2>연결</h2>
+    <div class="row">
+      <label>서버 <input id="host" type="text" spellcheck="false" value="192.168.45.185:8080"></label>
+	  <!-- <label>서버 <input id="host" type="text" spellcheck="false" value="172.18.46.125:8080"></label>  -->
+      <button id="btnConnect">연결 및 등록</button>
+      <span id="wsStatus" class="status off">끊김</span>
+    </div>
+    <div class="row">
+      <label><input id="mic" type="checkbox" checked> audio: 마이크 사용 (sendrecv)</label>
+      <label>video m-line (카메라는 열지 않음)
+        <select id="video" style="font:inherit;color:inherit;background:transparent;border:1px solid var(--line);border-radius:4px;padding:6px 8px">
+          <option value="sendonly" selected>sendonly (GPT와 동일)</option>
+          <option value="recvonly">recvonly</option>
+          <option value="inactive">inactive</option>
+          <option value="none">추가 안 함 (audio만)</option>
+        </select>
+      </label>
+      <label><input id="data" type="checkbox"> DataChannel 추가</label>
+    </div>
+    <div class="row">
+      <button id="btnCall" disabled>Call 시작 (Offer 전송)</button>
+      <button id="btnHangup" class="secondary" disabled>종료</button>
+      <button id="btnCsv" class="secondary" disabled>통계 CSV 저장</button>
+      <span id="iceStatus" class="status off">ICE: -</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>송신 통계 (1초 간격)</h2>
+    <div class="grid">
+      <div class="stat"><div class="k">availableOutgoingBitrate</div><div><span class="v" id="sAvail">-</span><span class="u">kbps</span></div></div>
+      <div class="stat"><div class="k">targetBitrate (audio)</div><div><span class="v" id="sTarget">-</span><span class="u">kbps</span></div></div>
+      <div class="stat"><div class="k">send delay (구간 평균)</div><div><span class="v" id="sDelay">-</span><span class="u">ms</span></div></div>
+      <div class="stat"><div class="k">send delay (최근 10초 최대)</div><div><span class="v" id="sDelayMax">-</span><span class="u">ms</span></div></div>
+      <div class="stat"><div class="k">packetsSent</div><div><span class="v" id="sSent">-</span></div></div>
+      <div class="stat"><div class="k">패킷/s</div><div><span class="v" id="sPps">-</span></div></div>
+      <div class="stat"><div class="k">RTT</div><div><span class="v" id="sRtt">-</span><span class="u">ms</span></div></div>
+      <div class="stat"><div class="k">RTT (최근 10초 최대)</div><div><span class="v" id="sRttMax">-</span><span class="u">ms</span></div></div>
+      <div class="stat"><div class="k">RTT (전체 최대)</div><div><span class="v" id="sRttMaxAll">-</span><span class="u">ms</span></div></div>
+      <div class="stat"><div class="k">RTT ≥ 50ms 횟수</div><div><span class="v" id="sRttHigh">-</span><span class="u" id="sRttSamples"></span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>로그</h2>
+    <pre id="log"></pre>
+    <h2 style="margin-top:16px">원격 오디오</h2>
+    <audio id="remoteAudio" autoplay controls></audio>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+let ws = null;
+let pc = null;
+let localStream = null;
+let iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
+let chain = Promise.resolve();
+let pendingCands = [];
+let statsTimer = null;
+let prev = null;
+let series = [];
+let rttMaxAll = null;
+let rttHighCnt = 0;       // RTT >= RTT_WARN_MS 인 측정 횟수
+let rttSampleCnt = 0;     // 새로 측정된 RTT 샘플 수
+let prevResponses = null; // candidate-pair.responsesReceived (새 샘플 판별용)
+const RTT_WARN_MS = 50;
+
+function log(msg) {
+  const t = new Date().toLocaleTimeString("ko-KR", { hour12: false });
+  const el = $("log");
+  const stick = el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
+  el.textContent += `${t}  ${msg}\n`;
+  if (stick) el.scrollTop = el.scrollHeight;
+}
+
+function send(obj) {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+}
+
+function setWs(on, text) {
+  const s = $("wsStatus");
+  s.textContent = text;
+  s.className = "status " + (on ? "on" : "off");
+}
+
+function setIce(text, ok) {
+  const s = $("iceStatus");
+  s.textContent = "ICE: " + text;
+  s.className = "status " + (ok ? "on" : "off");
+}
+
+/* ---------- 시그널링 ---------- */
+
+$("btnConnect").onclick = () => {
+  if (ws) return;
+  const url = `ws://${$("host").value.trim()}/peer`;
+  log(`웹소켓 연결 시도: ${url}`);
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    setWs(true, "연결됨");
+    log("연결 성공, regist 전송");
+    send({ cmd: "regist" });
+  };
+  ws.onclose = () => {
+    log("WebSocket 종료");
+    ws = null;
+    setWs(false, "끊김");
+    $("btnCall").disabled = true;
+  };
+  ws.onerror = () => log("WebSocket 오류 (서버 주소, 포트, 방화벽 확인)");
+  ws.onmessage = (ev) => {
+    let msg;
+    try { msg = JSON.parse(ev.data); } catch { log("JSON 파싱 실패"); return; }
+    onSignal(msg);
+  };
+};
+
+function onSignal(msg) {
+  switch (msg.cmd) {
+    case "regist_res":
+      if (msg.result !== "success") { log("등록 실패 (RTC node가 연결돼 있는지 확인)"); return; }
+      if (msg.iceinfo && msg.iceinfo.length) {
+        iceServers = msg.iceinfo.map((i) => ({ urls: i.url }));
+      }
+      log("등록 성공, iceServers = " + JSON.stringify(iceServers));
+      $("btnCall").disabled = false;
+      break;
+
+    case "answer":
+      chain = chain.then(async () => {
+        if (!pc) return;
+        await pc.setRemoteDescription({ type: "answer", sdp: msg.sdp });
+        log("RemoteDescription(answer) 설정 완료");
+        for (const c of pendingCands) await pc.addIceCandidate(c).catch((e) => log("candidate 추가 실패: " + e.message));
+        pendingCands = [];
+      }).catch((e) => log("answer 처리 실패: " + e.message));
+      break;
+
+    case "candidate":
+      chain = chain.then(async () => {
+        if (!pc || !msg.candidate) return;
+        const c = { candidate: msg.candidate, sdpMid: msg.mid, sdpMLineIndex: msg.mline_index };
+        if (!pc.remoteDescription) { pendingCands.push(c); return; }
+        await pc.addIceCandidate(c);
+      }).catch((e) => log("candidate 처리 실패: " + e.message));
+      break;
+  }
+}
+
+/* ---------- Call ---------- */
+
+$("btnCall").onclick = async () => {
+  if (pc) return;
+  $("btnCall").disabled = true;
+  log("PeerConnection 생성");
+  pc = new RTCPeerConnection({ iceServers });
+  pendingCands = [];
+
+  pc.onicecandidate = (ev) => {
+    if (!ev.candidate) return;
+    send({
+      cmd: "candidate",
+      candidate: ev.candidate.candidate,
+      mid: ev.candidate.sdpMid,
+      mline_index: ev.candidate.sdpMLineIndex,
+    });
+  };
+  pc.oniceconnectionstatechange = () => {
+    const st = pc.iceConnectionState;
+    log("ICE " + st);
+    setIce(st, st === "connected" || st === "completed");
+  };
+  pc.ontrack = (ev) => {
+    log(`원격 track 수신 kind=${ev.track.kind}`);
+    if (ev.track.kind === "audio") {
+      $("remoteAudio").srcObject = ev.streams[0] || new MediaStream([ev.track]);
+    }
+  };
+
+  try {
+    // audio: sendrecv. mid 0이 되도록 가장 먼저 추가한다.
+    if ($("mic").checked) {
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+      log("마이크 track 추가");
+    } else {
+      pc.addTransceiver("audio", { direction: "sendrecv" });
+      log("audio transceiver 추가 (track 없음)");
+    }
+
+    // video: sendonly m-line만 만들고 카메라는 열지 않는다 (track 없음 → RTP 송신 없음).
+    const vd = $("video").value;
+    if (vd !== "none") {
+      pc.addTransceiver("video", { direction: vd });
+      log(`video transceiver 추가 (${vd}, 카메라 열지 않음)`);
+    }
+    if ($("data").checked) {
+      pc.createDataChannel("data");
+      log("DataChannel 추가");
+    }
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    send({ cmd: "offer", sdp: offer.sdp });
+    log("offer 전송");
+
+    $("btnHangup").disabled = false;
+    startStats();
+  } catch (e) {
+    log("Call 시작 실패: " + e.message);
+    hangup();
+  }
+};
+
+function hangup() {
+  stopStats();
+  if (pc) { pc.close(); pc = null; }
+  if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
+  pendingCands = [];
+  chain = Promise.resolve();
+  setIce("-", false);
+  $("btnHangup").disabled = true;
+  $("btnCall").disabled = !(ws && ws.readyState === WebSocket.OPEN);
+  log("종료");
+}
+$("btnHangup").onclick = hangup;
+
+/* ---------- 통계 ---------- */
+
+function startStats() {
+  stopStats();
+  prev = null;
+  series = [];
+  rttMaxAll = null;
+  rttHighCnt = 0;
+  rttSampleCnt = 0;
+  prevResponses = null;
+  $("btnCsv").disabled = true;
+  statsTimer = setInterval(pollStats, 1000);
+}
+
+function stopStats() {
+  if (statsTimer) { clearInterval(statsTimer); statsTimer = null; }
+}
+
+async function pollStats() {
+  if (!pc) return;
+  let report;
+  try { report = await pc.getStats(); } catch { return; }
+
+  let pair = null, out = null;
+  report.forEach((s) => {
+    if (s.type === "candidate-pair" && s.nominated && s.state === "succeeded") pair = s;
+    if (s.type === "outbound-rtp" && s.kind === "audio") out = s;
+  });
+  if (!pair) return;
+
+  const row = {
+    t: Date.now(),
+    availKbps: pair.availableOutgoingBitrate != null ? pair.availableOutgoingBitrate / 1000 : null,
+    rttMs: pair.currentRoundTripTime != null ? pair.currentRoundTripTime * 1000 : null,
+    targetKbps: out && out.targetBitrate != null ? out.targetBitrate / 1000 : null,
+    sent: out ? out.packetsSent : null,
+    pps: null,
+    delayMs: null,
+  };
+
+  if (out && prev && out.timestamp > prev.timestamp) {
+    const dPk = out.packetsSent - prev.packetsSent;
+    const dT = out.timestamp - prev.timestamp;
+    row.pps = (dPk * 1000) / dT;
+    if (dPk > 0 && out.totalPacketSendDelay != null) {
+      row.delayMs = ((out.totalPacketSendDelay - prev.totalPacketSendDelay) / dPk) * 1000;
+    }
+  }
+  if (out) prev = { packetsSent: out.packetsSent, totalPacketSendDelay: out.totalPacketSendDelay, timestamp: out.timestamp };
+
+  series.push(row);
+  $("btnCsv").disabled = false;
+
+  const fmt = (v, d = 1) => (v == null ? "-" : v.toFixed(d));
+  const recent = series.slice(-10).map((r) => r.delayMs).filter((v) => v != null);
+  $("sAvail").textContent = fmt(row.availKbps, 0);
+  $("sTarget").textContent = fmt(row.targetKbps, 0);
+  $("sDelay").textContent = fmt(row.delayMs, 2);
+  $("sDelayMax").textContent = recent.length ? Math.max(...recent).toFixed(2) : "-";
+  $("sSent").textContent = row.sent == null ? "-" : row.sent;
+  $("sPps").textContent = fmt(row.pps, 1);
+  $("sRtt").textContent = fmt(row.rttMs, 1);
+  if (row.rttMs != null && (rttMaxAll == null || row.rttMs > rttMaxAll)) rttMaxAll = row.rttMs;
+  const recentRtt = series.slice(-10).map((r) => r.rttMs).filter((v) => v != null);
+  $("sRttMax").textContent = recentRtt.length ? Math.max(...recentRtt).toFixed(1) : "-";
+  $("sRttMaxAll").textContent = fmt(rttMaxAll, 1);
+
+  // 1초 폴링은 같은 RTT 값을 반복해서 보므로, 새 응답이 온 경우에만 샘플로 센다.
+  const resp = pair.responsesReceived;
+  const isNewSample = resp == null || prevResponses == null || resp > prevResponses;
+  prevResponses = resp;
+  if (row.rttMs != null && isNewSample) {
+    rttSampleCnt++;
+    if (row.rttMs >= RTT_WARN_MS) rttHighCnt++;
+  }
+  $("sRttHigh").textContent = rttHighCnt;
+  $("sRttSamples").textContent = `/ 측정 ${rttSampleCnt}회`;
+}
+
+$("btnCsv").onclick = () => {
+  const head = "time_iso,avail_kbps,target_kbps,send_delay_ms,packets_sent,pps,rtt_ms";
+  const lines = series.map((r) => [
+    new Date(r.t).toISOString(), r.availKbps, r.targetKbps, r.delayMs, r.sent, r.pps, r.rttMs,
+  ].map((v) => (v == null ? "" : typeof v === "number" ? +v.toFixed(3) : v)).join(","));
+  const blob = new Blob([head + "\n" + lines.join("\n") + "\n"], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `sender_stats_${Date.now()}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+</script>
+</body>
+</html>

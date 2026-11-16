@@ -1,0 +1,25 @@
+syntax = "proto3";
+package voice.agent.v1;
+
+service VoiceAgentService {
+    rpc GetAudioFormats(AudioFormatRequest) returns (AudioFormatReply);
+    rpc AudioStream(stream AudioFrame) returns (stream AudioFrame);    
+}
+
+message AudioFormat {
+    bool is_encoding = 1;       // pcm or opus
+    uint32 sample_rate_hz = 2;
+    uint32 channels = 3;
+}
+
+message AudioFormatRequest {
+}
+
+message AudioFormatReply {
+    repeated AudioFormat ingress_formats = 1;
+    repeated AudioFormat egress_formats = 2;
+}
+
+message AudioFrame {
+    bytes pcm_s16le = 1;
+}

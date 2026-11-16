@@ -1,0 +1,37 @@
+rtc_codec_root = get_path_info(".", "abspath")
+rtc_codec_config = [ rtc_codec_root + ":RTCCodecConfig" ]
+rtc_codec_link_configs = [ rtc_codec_root + ":RTCCodecLinkConfig" ]
+
+set_defaults("rtc_codec_source_set") {
+    configs = rtc_codec_config
+}
+
+set_defaults("rtc_codec_shared_library") {
+    configs = rtc_codec_link_configs    
+}
+
+template("rtc_codec_source_set") {
+  source_set(target_name) {
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                            "configs", 
+                           ])
+    if (defined(invoker.configs)) {
+      configs += invoker.configs
+    }
+  }    
+}
+
+template("rtc_codec_shared_library") {
+  shared_library(target_name) {
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                             "configs",
+                           ])
+    if (defined(invoker.configs)) {
+      configs += invoker.configs
+    }
+  }    
+}

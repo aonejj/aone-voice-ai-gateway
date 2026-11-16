@@ -1,65 +1,14 @@
-# Voice AI Gateway
+# aone_voice_ai_gateway
 
-**A C++ Based WebRTC Gateway for Real-Time Voice AI Communication**
+A WebRTC gateway for real-time voice AI agents, built on a server-oriented PeerConnection derived from Google libwebrtc.
 
-## Project Overview
+Browser audio arrives over WebRTC (Opus), is decoded and resampled by the Gateway, and is streamed to an external Voice AI Agent over gRPC. The Agent's PCM reply is buffered, Opus-encoded on a 20 ms tick, and sent back to the browser as RTP.
 
-Voice AI Gateway is a real-time voice communication infrastructure that connects WebRTC clients with external Voice AI Agent systems.
-
-It provides a WebRTC-based audio communication layer and bridges real-time audio streams to external agents through gRPC.
-
-The project focuses on low-latency audio communication, media processing, and scalable integration architecture for Voice AI applications.
-
-## Project Scope
-
-This project focuses on building a real-time Voice AI Gateway that provides WebRTC-based media handling and integration with external voice agent services.
-
-The primary responsibilities of the gateway include:
-
-- WebRTC media ingress and egress
-- RTP/RTCP handling and real-time media transport
-- Audio processing, including decoding, downmixing, and resampling
-- Bidirectional audio streaming between WebRTC clients and external agents
-- Agent communication through gRPC-based streaming interfaces
-
-### Agent Integration
-
-The project includes a lightweight Python Test Agent to validate the gateway's audio streaming and communication architecture.
-
-The Test Agent is intended for integration testing and does not implement actual STT, TTS, or LLM functionality.
-
-The architecture is designed to support integration with external AI components, such as:
-
-- Speech-to-Text (STT)
-- Large Language Models (LLM)
-- Text-to-Speech (TTS)
-
-The implementation and operation of these AI engines are outside the scope of this project.
-
-## Motivation
-
-The project originally started with a personal goal: to build my own WebRTC SFU server.
-
-Rather than building an SFU by combining existing open-source components such as libnice for ICE and implementing RTP packet handling separately, I wanted to take a different approach.
-
-I chose Google's WebRTC Native Source as the foundation.
-
-My idea was to reinterpret the original WebRTC implementation for server-side use: retain and adapt most of its core networking and media transport capabilities, remove components that were unnecessary for the server architecture, and add functionality required for server-side operation.
-
-The goal was not simply to assemble existing WebRTC components, but to build a server-side WebRTC architecture based on the original WebRTC implementation itself.
-
-This work eventually became the foundation for the Voice AI Gateway.
+> **Status: prototype / pre-alpha.**  
+> This project works in the author's test setup (Ubuntu VM, Chrome, echo/tone test agent). It is not production-ready.  
+> It has no authentication, uses plaintext WebSocket and insecure gRPC, and must not be exposed to the public Internet.
 
 ## Architecture
-
-The gateway acts as an intermediary between WebRTC clients and external Voice AI Agents.
-
-The architecture separates session orchestration from real-time media processing:
-
-- **Signaling Server:** Handles session orchestration and coordinates Gateway and Agent nodes.
-- **C++ Voice AI Gateway:** Manages WebRTC media transport, audio processing, and Agent communication.
-- **Python Voice Agent:** Provides a lightweight test implementation for validating bidirectional audio streaming.
-- **Potential AI Integration:** The architecture can be extended to integrate external STT, LLM, and TTS services.
 
 ```mermaid
 flowchart TB
@@ -81,7 +30,7 @@ flowchart TB
     end
 
     subgraph Agent["Python Voice Agent"]
-        Test["Lightweight Test Agent<br/>gRPC Audio Streaming Test"]
+        Test["Lightweight Test Agent<br/>Echo / Tone<br/>gRPC Audio Streaming Test"]
     end
 
     subgraph Future["Potential External AI Services"]
@@ -114,20 +63,44 @@ flowchart TB
 
 *Solid lines represent implemented communication paths. Dashed lines indicate orchestration or potential future integration.*
 
-### Main Communication Flow
+## What It Does
+
+- WebRTC audio ingress and egress
+- ICE, RTP, RTCP, and Transport-Wide Congestion Control (TWCC) handling
+- Opus decoding and encoding
+- PCM conversion, channel conversion, downmixing, and resampling
+- Optional Voice Activity Detection (VAD)
+- Bidirectional PCM audio streaming to an external Agent over gRPC
+- WebSocket signaling and Gateway/Agent registration
+- Echo/tone Python test Agent for integration testing
+
+The included Python Test Agent validates the Gateway-Agent audio path. It does **not** implement STT, LLM, or TTS functionality.
+
+## Main Communication Flow
 
 1. A WebRTC client establishes a session through the signaling server.
 2. The signaling server coordinates session assignment between available Gateway and Agent nodes.
 3. The C++ Gateway establishes and manages the WebRTC media connection.
-4. Incoming audio is decoded and converted into the required PCM format.
+4. Incoming Opus audio is decoded and converted into the required PCM format.
 5. Audio frames are streamed bidirectionally between the Gateway and the Python Test Agent through gRPC.
-6. The Test Agent validates the audio streaming interface and Gateway-Agent communication.
+6. The Test Agent returns audio through the same gRPC stream.
+7. The Gateway buffers, Opus-encodes, and transmits the returned audio back to the browser as RTP.
 
-The architecture is designed to support future integration with external STT, LLM, and TTS services through the Agent layer. These AI components are not implemented in the current project.
+## Project Scope
+
+This project focuses on the real-time media and integration layer for Voice AI applications:
+
+- WebRTC-based media transport
+- Server-side PeerConnection architecture
+- Audio decoding, encoding, and format conversion
+- Gateway-to-Agent gRPC streaming
+- Signaling and node orchestration
+
+The implementation and operation of external AI engines are outside the scope of this project. The architecture is designed so that future STT, LLM, and TTS services can be integrated through the Agent layer.
 
 ## Core Components
 
-### 1. WebRTC Media Layer (C++)
+### WebRTC Media Layer
 
 The WebRTC media layer is built around a server-side PeerConnection architecture based on Google's WebRTC Native Source.
 
@@ -140,9 +113,9 @@ Key areas include:
 - RTCP feedback handling
 - Audio RTP reception and transmission
 
-### 2. Audio Processing (C++)
+### Audio Processing
 
-The audio processing layer handles audio conversion between WebRTC media and Voice AI Agent requirements.
+The audio processing layer converts audio between WebRTC media and Voice AI Agent requirements.
 
 Key areas include:
 
@@ -153,11 +126,9 @@ Key areas include:
 - Voice Activity Detection (VAD)
 - Audio buffering and frame management
 
-### 3. Agent Communication (C++ / Python)
+### Agent Communication
 
 The Gateway communicates with external Voice AI Agents through a gRPC-based bidirectional streaming interface.
-
-A lightweight Python Test Agent is included to validate audio streaming and Gateway-Agent communication.
 
 Key areas include:
 
@@ -168,13 +139,9 @@ Key areas include:
 - Python Test Agent integration
 - Extensible interface for future Voice AI service integration
 
-**Note:** The Python Agent is currently a test implementation. STT, LLM, and TTS processing are outside the scope of this project.
+### Signaling Server
 
-### 4. Signaling Server (TypeScript)
-
-The signaling server handles session signaling and coordination between WebRTC clients and Gateway nodes.
-
-It also manages Agent node information and coordinates the assignment of Gateway and Agent resources for each session.
+The TypeScript signaling server handles session signaling and coordination between WebRTC clients, Gateway nodes, and Agent nodes.
 
 Key areas include:
 
@@ -185,297 +152,391 @@ Key areas include:
 - Session coordination
 - ICE signaling exchange
 
-## Build & Installation
+## Status
 
-### Prerequisites
+| Area | State |
+|---|---|
+| WebSocket signaling server (`/peer`, `/node`, `/agent` roles) | Working |
+| WebRTC audio ingress: Opus decode, channel conversion, resampling | Working |
+| gRPC agent client: async CompletionQueue client, channel/stream lifecycle | Working in the author's tests; lifecycle code has not been validated with TSAN/ASAN |
+| Egress: PCM ring buffer, 20 ms tick, Opus encode, RTP output | Working |
+| Python test agent: echo / tone, signaling registration | Working |
+| VAD gating of ingress audio | Optional; compile-time flag `__ENABLE_VAD__`, disabled by default |
+| Barge-in / interruption / clear protocol | Not implemented; designed only, and the proto has no control messages yet |
+| TLS / authentication | Not implemented |
+| Real STT / LLM / TTS agent | Not included; only echo and tone test agents are provided |
+| Multi-node scale-out | Not implemented |
+| Performance and capacity benchmarks | Not published; measurements so far come from a 2-vCPU VM only |
+| Production deployment validation | Not validated |
 
-The project is primarily developed for Linux environments.
+## Repository Layout
 
-Expected development tools and dependencies include:
+```text
+proto/                         gRPC service definition shared by the Gateway and Agents
+signaling_server/              Node.js / TypeScript WebSocket signaling server (port 8080)
+agent_server/                  Python test agent (echo / tone) that registers itself with the signaling server
+client/browser/                Browser pages (index2.html: sender, rtc_node.html: Chrome baseline node)
+gateway_core/                  C++ Gateway (GN / Ninja)
+  RTCPeerConnection/           server-side peerconnection
+  RTCVoiceGateway/             Gateway server and 20 ms audio tick scheduler
+  RTCAgentBridge/              Ingress/egress bridge between WebRTC audio and the Agent
+  GRPCAgentClient/             gRPC client for the Agent; built with CMake and driven by a GN action
+  RTCClient/                   WebRTC client wrappers
+  RTCCodec/                    Opus codec integration
+  RTCAudioUtils/               Audio utilities
+  RTCSignalingSession/         Signaling session handling
+  RTCUtils/                    General utilities
+  RTCVad/                      Voice Activity Detection (optional)
+  ALog/                        Logging, derived from AOSP liblog
+  RTCVoiceGatewayTestExec/     Test executable
+```
 
-- Linux (Ubuntu)
-- C++ compiler with C++17 support
-- GN and Ninja build system
-- CMake
-- Python 3
-- Node.js and npm (for the signaling server)
-- gRPC and Protocol Buffers
+## RTCPeerConnection
 
-Additional dependencies may be required depending on the build configuration.
+`gateway_core/RTCPeerConnection` is a server-oriented modification of Google's libwebrtc. It includes custom Pacer, RTCP handling, simulcast routing, and thread/resource architecture changes.
 
-### Build Instructions
+It is not included in this repository because of its size.
 
-This section describes how to prepare the development environment, build the project components, and run the Voice AI Gateway test environment.
+Add it as a Git submodule at `gateway_core/RTCPeerConnection`, or clone it there.
 
-The build process includes:
+```text
+Source: <URL of the RTCPeerConnection repository>
+```
 
-### 1. Native WebRTC Gateway
+Build it so that its libraries are placed in the same GN output directory as this project, for example `out/debug`. See that repository's README for its build steps.
 
-The native WebRTC Gateway is implemented in C++ and uses Google's WebRTC Native Source, modified for server-side PeerConnection functionality.
+### Provenance
 
-Navigate to the `gateway_core` directory:
+The sources were merged from different WebRTC revisions from the 2020 and 2023 era. Therefore, there is no single upstream base commit.
+
+A file-level provenance document is planned.
+
+The WebRTC license (BSD 3-Clause) and patent grant apply to that code.
+
+## Requirements
+
+- Linux; developed on Ubuntu
+- Clang
+- C++17-compatible compiler
+- GN and Ninja
+- CMake 3.15 or later
+- pkg-config
+- gRPC (`grpc++`)
+- Protocol Buffers
+- Opus
+- libwebsockets
+- Jansson
+- OpenSSL
+- Node.js 20 or later
+- Python 3 with `grpcio`, `grpcio-tools`, and `websockets`
+
+### Ubuntu Example
+
+Package names may differ by Ubuntu release.
+
+```bash
+sudo apt install clang cmake ninja-build pkg-config libopus-dev libwebsockets-dev \
+  libjansson-dev libssl-dev libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc
+
+pip install grpcio grpcio-tools websockets
+```
+
+## Build
+
+### Native WebRTC Gateway
 
 ```bash
 cd gateway_core
-```
-
-Generate the Ninja build files using GN:
-
-```bash
-gn gen --args='...' out/debug
-```
-
-Build the Gateway:
-
-```bash
+gn gen out/debug
 ninja -C out/debug
 ```
 
-After a successful build, the `RTCVoiceGatewayTestExecute` executable is generated in the build output directory.
+For a release build:
 
-### 2. C++ gRPC Agent Client
+```bash
+gn gen out/release --args='is_debug=false'
+ninja -C out/release
+```
 
-The C++ gRPC Agent Client provides asynchronous bidirectional audio streaming between the WebRTC Gateway and the Python Test Agent.
+The Gateway test executable is generated as:
 
-It is built as a shared library and integrated into the Gateway build.
+```text
+gateway_core/out/debug/RTCVoiceGatewayTestExecute
+```
 
-The build process uses CMake and is invoked through the Gateway's GN build configuration.
-
-The resulting shared library is:
+`GRPCAgentClient` is built with CMake. A GN action invokes it as part of the Ninja build, producing:
 
 ```text
 libgrpc_agent_client.so
 ```
 
-Make sure the gRPC Agent Client is successfully built and available in the Gateway runtime library path.
+The shared library is placed alongside the other build outputs. Do not use a debug build for timing measurements: debug builds are compiled without optimization, and the audio tick cost is dominated by that.
 
-### 3. Python Test Agent
+## Run
 
-The Python Test Agent is used to validate bidirectional audio streaming between the Gateway and an external Agent process.
-
-Navigate to the `agent_server` directory:
-
-```bash
-cd agent_server
-
-python3 -m venv venv
-source venv/bin/activate
-pip install grpcio grpcio-tools
-python -m grpc_tools.protoc \
-    -I../proto \
-    --python_out=. \
-    --grpc_python_out=. \
-    ../proto/voice_agent.proto
-```
-
-Activate the Python virtual environment:
-
-```bash
-source venv/bin/activate
-```
-
-The Agent can then be started using:
-
-```bash
-python voice_agent_server.py
-```
-
-By default, the Test Agent listens on the local IP address at port `50051`.
-
-The Agent connects to the Signaling Server through WebSocket. Use `--signaling-url` to specify the Signaling Server address:
-
-```bash
-python voice_agent_server.py --signaling-url ws://192.168.0.100:8080/agent
-```
-
-The default Signaling Server endpoint is:
-
-```text
-ws://<local-ip>:8080/agent
-```
-
-### 4. Signaling Server
-
-The Signaling Server is implemented in TypeScript and is responsible for session orchestration and coordination between Gateway and Agent nodes.
-
-Navigate to the `signaling_server` directory:
-
-```bash
-cd signaling_server
-```
-
-Install the Node.js dependencies:
-
-```bash
-npm install
-```
-
-Compile the TypeScript source:
-
-```bash
-npx tsc
-```
-
-Start the Signaling Server:
-
-```bash
-npm run dev
-```
-
-By default, the Signaling Server listens on the local IP address at port `8080`.
-
-### 5. WebRTC Gateway Runtime Configuration
-
-After building the Gateway, navigate to the directory containing the `RTCVoiceGatewayTestExecute` executable.
-
-By default, the Gateway connects to the Signaling Server at the local IP address on port `8080`.
-
-To connect to a Signaling Server at a specific IP address and port, use the following options:
-
-```bash
-./RTCVoiceGatewayTestExecute --ip 192.168.0.100 --port 8080
-```
-
-- `--ip`: Signaling Server IP address.
-- `--port`: Signaling Server port.
-
-## Running the System
-
-Start the components in the following order:
+Start the components in separate terminals.
 
 ### 1. Start the Signaling Server
 
 ```bash
 cd signaling_server
-npm run
+npm install
+npm run dev
 ```
 
-The Signaling Server listens on the local IP address at port `8080` by default.
+The signaling server listens on `0.0.0.0:8080` by default.
 
 ### 2. Start the Python Test Agent
 
+Generate the protobuf code once:
+
 ```bash
 cd agent_server
-source venv/bin/activate
-python py
+python3 -m grpc_tools.protoc \
+  -I ../proto \
+  --python_out=. \
+  --grpc_python_out=. \
+  ../proto/voice_agent.proto
 ```
 
-The Test Agent listens on the local IP address at port `50051` by default and registers with the Signaling Server.
-
-To use a different Signaling Server endpoint:
+Start the Agent:
 
 ```bash
-python py --signaling-url ws://192.168.0.100:8080/agent
+python3 voice_agent_server.py --port 50051 --mode echo
+```
+
+By default, the Agent listens on `0.0.0.0:50051` and registers with the signaling server.
+
+To use a different signaling server endpoint:
+
+```bash
+python3 voice_agent_server.py \
+  --signaling-url ws://192.168.0.100:8080/agent
+```
+
+To run only the gRPC server without registering with the signaling server:
+
+```bash
+python3 voice_agent_server.py --no-signaling
 ```
 
 ### 3. Start the WebRTC Gateway
 
-Navigate to the directory containing the Gateway executable:
-
 ```bash
-cd gateway_core/out/debug
-./RTCVoiceGatewayTestExecute
+cd gateway_core
+./out/debug/RTCVoiceGatewayTestExecute
 ```
 
-The Gateway connects to the local Signaling Server at port `8080` by default.
+When the executable starts, type `s` to start and `e` to stop.
 
-To specify a different Signaling Server address:
+By default, the Gateway connects to the signaling server on the local machine at port `8080`.
+
+To specify a different signaling server address:
 
 ```bash
-./RTCVoiceGatewayTestExecute --ip 192.168.0.100 --port 8080
+./out/debug/RTCVoiceGatewayTestExecute --ip 192.168.0.100 --port 8080
 ```
 
-### 4. Connect a WebRTC Client
+### 4. Open the Browser Client
 
-Start the WebRTC Client and connect it to the Signaling Server to establish a WebRTC session through the Gateway.
+Serve the browser page:
 
-Once connected, the Gateway receives WebRTC audio and forwards it to the Python Test Agent through the gRPC bidirectional audio streaming interface.
+```bash
+python3 -m http.server -d client/browser 8000
+```
 
-The Python Test Agent returns audio through the same gRPC stream, allowing the Gateway-Agent audio communication path to be validated.
-
----
-
-## Notes
-
-- The Signaling Server, Python Test Agent, and WebRTC Gateway are separate processes.
-- The Signaling Server coordinates Gateway and Agent registration and session orchestration.
-- The Python Test Agent is a lightweight test implementation for validating audio streaming. It does not implement STT, TTS, or LLM functionality.
-- The Gateway and Agent communicate through gRPC bidirectional streaming.
-- The default ports are `8080` for the Signaling Server and `50051` for the Python Test Agent.
-
-### Configuration
-
-Runtime configuration should be provided separately from source code.
-
-Do not commit API keys, credentials, or environment-specific configuration files to the repository.
-
-Refer to the example configuration files when available.
-
-## Web Client
-
-The project includes a simple HTML-based WebRTC test client.
-
-The client connects to the Signaling Server through a WebSocket connection and allows you to test WebRTC audio communication with the Voice AI Gateway.
-
-### Configuration
-
-Open `client/index.html` in a web browser.
-
-Before connecting, enter the Signaling Server address in the **Server** field.
+Open:
 
 ```text
-<SIGNALING_SERVER_IP>:8080
+http://localhost:8000/index.html
 ```
 
-## Project Status
+Enter the signaling server address in the **Server** field:
 
-Voice AI Gateway is an actively developed project.
+```text
+<signaling-server-ip>:8080
+```
 
-| Component | Status |
-|---|---|
-| WebRTC Gateway | Implemented |
-| Server-side PeerConnection | Implemented |
-| ICE / RTP / RTCP handling | Implemented |
-| Audio Processing Pipeline | Implemented |
-| C++ gRPC Agent Client | Implemented |
-| Python Test Agent Integration | Implemented |
-| TypeScript Signaling Server | Implemented |
-| Performance Benchmarking | Ongoing |
-| Production Deployment Validation | Not yet validated |
+Microphone access requires `localhost` or HTTPS.
 
-The project is intended to demonstrate the design and implementation of a real-time WebRTC-based Voice AI infrastructure.
+## Defaults
+
+| Component | Option | Default |
+|---|---|---|
+| Signaling server | Port | `8080` (constant in `signaling_server/src/main.ts`) |
+| Gateway test executable | `--ip`, `-i` | This machine's IP address |
+| Gateway test executable | `--port`, `-p` | `8080` |
+| Test Agent | `--signaling-url` | `ws://<this-machine-ip>:8080/agent` |
+| Test Agent | `--no-signaling` | Off |
+| Test Agent | `--port` | `50051` |
+| Test Agent | `--host` | `0.0.0.0` |
+| Test Agent | `--mode` | `echo` |
+
+The machine IP is the address of the default-route interface. On a machine with multiple interfaces, VPNs, or Docker networks, pass the address explicitly.
+
+```bash
+./out/debug/RTCVoiceGatewayTestExecute --ip 192.168.0.10 --port 8080
+python3 voice_agent_server.py --signaling-url ws://192.168.0.10:8080/agent
+```
+
+## Interfaces
+
+### Signaling
+
+The signaling server uses JSON messages over WebSocket.
+
+Roles are separated by path:
+
+- `/peer`: browser client
+- `/node`: Gateway or Chrome baseline node
+- `/agent`: Agent registration
+
+Agent registration uses a message such as:
+
+```json
+{
+  "cmd": "regist",
+  "endpoint": "host:port"
+}
+```
+
+### Agent Protocol
+
+`proto/voice_agent.proto` defines:
+
+- `GetAudioFormats`: audio format handshake
+- `AudioStream`: bidirectional raw PCM S16LE audio frames
+
+The test Agent uses:
+
+- 16 kHz mono PCM
+- 20 ms frames
+
+## Security Notes
+
+> **This project is intended for local development and trusted-network testing only.**  
+> Do not expose the signaling server, Gateway, Agent, or browser client to the public Internet in its current form.
+
+### Current Security Posture
+
+| Area | Current State | Risk |
+|---|---|---|
+| Signaling transport | Plain `ws://` WebSocket | Signaling messages, SDP, and ICE candidates can be observed or tampered with on the network. |
+| Signaling authentication | None | Any reachable client can connect as a peer, register as a Gateway, or register an Agent. |
+| Agent registration | Unauthenticated | Any client that can reach the signaling server can submit an Agent endpoint; the Gateway may then open a gRPC connection to that address. |
+| Gateway-to-Agent gRPC | Insecure channel; no TLS or mTLS | Audio PCM and control messages can be intercepted, modified, or impersonated. |
+| Server binding | Components may bind to `0.0.0.0` | Services are reachable from every network interface unless explicitly restricted. |
+| Browser client | Served over plain HTTP in the documented test flow | Browser microphone access requires `localhost` or HTTPS; non-local HTTP usage is not a secure deployment model. |
+| ICE configuration | Public Google STUN server is provided by default | Client public IP addresses may be exposed to a third-party STUN service. |
+| TURN | Not included | NAT traversal may fail in restrictive networks. TURN, when added, must use authenticated and preferably short-lived credentials. |
+
+### Why This Matters
+
+WebRTC media streams are protected with DTLS-SRTP, but that does not make the complete application secure by itself.
+
+The signaling channel, user authorization, ICE/TURN configuration, server configuration, and media processing performed outside the browser-to-browser encrypted path remain the operator's responsibility.
+
+In this project, the Gateway receives decoded PCM audio and forwards it to an Agent over gRPC. Therefore, the Gateway and Agent must be treated as trusted media-processing components: once audio reaches the Gateway, end-to-end browser encryption does not protect the Gateway-to-Agent communication path.
+
+### Required Controls Before Shared Deployment
+
+Before deploying beyond a single developer machine or a fully trusted LAN, implement at least the following:
+
+- Serve the signaling server and browser client over HTTPS and use `wss://` rather than `ws://`.
+- Authenticate WebSocket connections and authorize each signaling action, including peer registration, Gateway registration, Agent registration, and session creation.
+- Restrict Agent registration to authenticated, trusted Gateway or operator identities. Do not allow arbitrary clients to submit arbitrary `host:port` endpoints.
+- Enable TLS for Gateway-to-Agent gRPC. For service-to-service communication, prefer mutual TLS (mTLS) with short-lived certificates and automated rotation.
+- Bind services to specific internal interfaces where possible. Use firewall rules or security groups to allow only required source networks and ports.
+- Replace the default public STUN endpoint with your own STUN/TURN configuration when privacy or network policy requires it.
+- If TURN is introduced, use authenticated, short-lived credentials issued by the application server rather than static shared credentials.
+- Do not commit API keys, TURN credentials, certificates, or environment-specific configuration files to the repository. Load them from environment variables, secret managers, or deployment-specific configuration files.
+- Add request and session rate limiting, logging, and alerting before exposing the system to multiple users.
+
+### Recommended Production Baseline
+
+For a production-oriented deployment, the minimum target should be:
+
+- `https://` for the browser client and `wss://` for signaling.
+- Authenticated and role-aware signaling: browser, Gateway, and Agent roles must not share an unauthenticated registration path.
+- TLS or mTLS for all Gateway-to-Agent gRPC traffic.
+- A private or authenticated STUN/TURN deployment, with TURN credentials that expire.
+- Network isolation between the Gateway, Agent, signaling server, and any future STT/LLM/TTS service.
+- No direct public exposure of the Gateway's WebRTC media ports, Agent gRPC port, or internal service ports.
 
 ## Known Limitations
 
 ### Stability
-- An intermittent runtime crash has been observed.
-- The root cause is currently under investigation.
-- Further testing and debugging are ongoing to improve stability.
 
-### Performance Evaluation
+- An intermittent runtime crash has been observed during testing.
+- The root cause has not yet been identified.
+- The Gateway lifecycle, gRPC client lifecycle, audio scheduler, and media-path error handling have not yet been validated with sanitizers such as ASan or TSan.
+- Unexpected peer disconnects, Agent failures, malformed signaling messages, and mid-session gRPC stream failures may not yet be handled cleanly.
 
-- Development and performance testing have been conducted in an Ubuntu VM running on a Windows laptop using VirtualBox.
-- Due to the limitations and overhead of the virtualized environment, performance measurements may not accurately represent the system's actual performance.
-- The current benchmark results should be considered preliminary and are provided for reference only.
-- Reliable performance evaluation requires testing on dedicated hardware under controlled conditions.
+### Concurrency and Performance
+
+- The 20 ms egress audio tick does not remain stable with approximately 16 concurrent peers in the author's 2-vCPU VM test environment.
+- The current tick scheduler uses a fixed number of worker threads and does not yet adapt to load or peer count.
+- No published latency, CPU, memory, packet-loss, jitter, or capacity benchmarks are available.
+- Existing measurements were collected in a VirtualBox VM and should be treated as preliminary. They do not establish production capacity or real-hardware performance.
+- Debug instrumentation, including PCM file dumps and timing helpers, may still be present in some source files.
+
+### Protocol and Feature Gaps
+
+- Barge-in, interruption, and agent-output clearing are designed conceptually but are not implemented.
+- The current `voice_agent.proto` defines audio format negotiation and bidirectional raw PCM streaming, but does not yet define control messages for interruption, cancellation, session state, or error reporting.
+- The included Python Agent is an echo/tone test agent only. It does not implement STT, LLM, TTS, or any production voice-AI workflow.
+- Multi-node scale-out, Gateway/Agent failover, session recovery, and horizontal scaling are not implemented.
+- There is no production deployment validation, operational runbook, monitoring integration, or capacity-planning guidance yet.
+
+### Compatibility and Provenance
+
+- The project has been tested primarily with Chrome and an Ubuntu VM. Browser, OS, network, and codec compatibility have not been broadly validated.
+- `gateway_core/RTCPeerConnection` is a modified, server-oriented variant of Google libwebrtc and is not included directly in this repository.
+- Its sources were merged from WebRTC revisions from different periods, so there is no single upstream base commit.
+- A file-level provenance document is planned but not yet available.
+- WebRTC-related code remains subject to the WebRTC BSD 3-Clause license and patent grant. Third-party dependencies retain their own licenses.
 
 ## Roadmap
 
 - Improve Gateway scalability and resource management.
 - Improve real-time audio streaming performance.
-- Expand monitoring and performance metrics.
-- Improve deployment and build documentation.
+- Implement barge-in, interruption, and Agent output clearing.
+- Add TLS, authentication, and authorization for signaling and gRPC.
+- Add monitoring, metrics, tracing, and alerting.
+- Improve deployment, build, and operations documentation.
 - Extend Voice AI Agent integration.
 - Explore integration with external STT, LLM, and TTS services.
+- Validate performance on dedicated hardware under controlled conditions.
 
-## Contribution
+## Configuration
+
+Runtime configuration should be provided separately from source code.
+
+Do not commit API keys, credentials, certificates, TURN credentials, or environment-specific configuration files to the repository.
+
+Refer to example configuration files when available.
+
+## AI Assistance
+
+Parts of this repository were drafted with AI assistance and then reviewed and tested by the author.
+
+AI-assisted areas include:
+
+- The gRPC Agent client layer
+- The egress ring buffer
+- The audio tick scheduler
+- The Python test Agent
+- Build scripts
+
+## Contributing
 
 Contributions, bug reports, and technical discussions are welcome.
+
 Feel free to open an issue or submit a pull request.
 
 ## Contact
 
-Email: jacques97jj@gmail.com
+Email: [jacques97jj@gmail.com](mailto:jacques97jj@gmail.com)
 
 [LinkedIn](https://linkedin.com/in/joongje-jang)
 
@@ -483,7 +544,7 @@ Email: jacques97jj@gmail.com
 
 This project is licensed under the Apache License 2.0.
 
-See the [LICENSE](LICENSE) file for details.
+See [LICENSE](LICENSE) for details.
 
 Third-party components and dependencies retain their respective licenses and copyright notices. Refer to `THIRD_PARTY_NOTICES.md` for applicable third-party license information.
 

@@ -1,0 +1,38 @@
+aone_voice_ai_gateway
+Copyright 2024-2026 The aone_voice_ai_gateway authors
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This repository contains third-party code and depends on third-party software,
+each under its own license.
+
+--------------------------------------------------------------------------
+Included in this repository
+--------------------------------------------------------------------------
+
+Android Open Source Project (AOSP) - liblog
+  Location : gateway_core/ALog/
+  License  : Apache License, Version 2.0
+  Copyright (C) The Android Open Source Project
+  The source files in this directory were derived from AOSP and modified for
+  building outside of Android (Linux, GN). The original copyright and license
+  headers are retained in the files.
+
+--------------------------------------------------------------------------
+Not included, but required to build or run (each under its own license)
+--------------------------------------------------------------------------
+
+Google WebRTC (libwebrtc)      BSD 3-Clause (with the WebRTC patent grant, PATENTS)
+                               Provided through the RTCPeerConnection directory (see README).
+Opus                           BSD 3-Clause
+gRPC                           Apache License 2.0
+Protocol Buffers               BSD 3-Clause
+libwebsockets                  MIT
+Jansson                        MIT
+OpenSSL (3.x)                  Apache License 2.0
+ws (npm)                       MIT
+websockets (PyPI)              BSD 3-Clause
+grpcio / grpcio-tools (PyPI)   Apache License 2.0
+
+Distributing a build that bundles any of the above requires including that
+component's own license text and notices.

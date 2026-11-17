@@ -195,16 +195,6 @@ gateway_core/                  C++ Gateway (GN / Ninja)
 
 `gateway_core/RTCPeerConnection` is a server-oriented modification of Google's libwebrtc. It includes custom Pacer, RTCP handling, simulcast routing, and thread/resource architecture changes.
 
-It is not included in this repository because of its size.
-
-Add it as a Git submodule at `gateway_core/RTCPeerConnection`, or clone it there.
-
-```text
-Source: <URL of the RTCPeerConnection repository>
-```
-
-Build it so that its libraries are placed in the same GN output directory as this project, for example `out/debug`. See that repository's README for its build steps.
-
 ### Provenance
 
 The sources were merged from different WebRTC revisions from the 2020 and 2023 era. Therefore, there is no single upstream base commit.

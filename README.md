@@ -481,7 +481,7 @@ For a production-oriented deployment, the minimum target should be:
 ### Compatibility and Provenance
 
 - The project has been tested primarily with Chrome and an Ubuntu VM. Browser, OS, network, and codec compatibility have not been broadly validated.
-- `gateway_core/RTCPeerConnection` is a modified, server-oriented variant of Google libwebrtc and is not included directly in this repository.
+- `gateway_core/RTCPeerConnection` is a modified, server-oriented variant of Google libwebrtc.
 - Its sources were merged from WebRTC revisions from different periods, so there is no single upstream base commit.
 - A file-level provenance document is planned but not yet available.
 - WebRTC-related code remains subject to the WebRTC BSD 3-Clause license and patent grant. Third-party dependencies retain their own licenses.

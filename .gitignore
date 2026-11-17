@@ -3,7 +3,7 @@
 # Build outputs
 # ==================================================
 out/
-build/
+./gateway_core/GRPCAgentClient/build/
 cmake-build-*/
 CMakeFiles/
 CMakeCache.txt

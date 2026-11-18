@@ -1,14 +1,24 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// author : kimi
-// desc   : peerconnection lite version for rtc media server.
-//
-//////////////////////////////////////////////////////////////////////////
+/*
+*  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
+*
+*  Use of this source code is governed by a BSD-style license
+*  that can be found in the LICENSE file in the root of the source
+*  tree. An additional intellectual property rights grant can be found
+*  in the file PATENTS.  All contributing project authors may
+*  be found in the AUTHORS file in the root of the source tree.
+*/
+
+/*
+ *  Modified by kimi.
+ *  This file is a modified replacement for
+ *  pc/peer_connection.h.
+ *
+ *  Distributed under the same BSD-style license as the original
+ *  WebRTC source code.
+ */
 
 #ifndef __RTC_CONNECTION_H__
 #define __RTC_CONNECTION_H__
-
-#define __FOR_TEST_USING_PC_INTERNAL__
 
 #include <stdint.h>
 #include <memory>
@@ -243,20 +253,13 @@ public:
 
 	bool ValidateBundleSettings(const cricket::SessionDescription* desc) override;
 
-//#ifdef __FOR_TEST_USING_PC_INTERNAL__
 	// RTCConnectionInternal override method
 	rtc::Thread* network_thread() const final { return _network_thread; }
 	rtc::Thread* signaling_thread() const final { return _signaling_thread; }
 	rtc::Thread* worker_thread() const final { return _worker_thread; }
 	void BaseChannelConnectSentPacketSignal(cricket::RTCBaseChannel *channel) override;
 	void SctpDataChannelConnectClosedSignal(SctpDataChannel *channel) override;
-// #else
-// 	const rtc::Thread* signaling_thread() const { return _signaling_thread; }
-// 	rtc::Thread* worker_thread() { return _worker_thread; }
-// 	const rtc::Thread* worker_thread() const { return _worker_thread; }
-// 	rtc::Thread* network_thread() { return _network_thread; }
-// 	const rtc::Thread* network_thread() const { return _network_thread; }
-// #endif
+
 
 	RTCRtpTransmissionManager* rtp_manager() override { return rtp_manager_.get(); }
 	const RTCRtpTransmissionManager* rtp_manager() const override {

@@ -7,6 +7,16 @@
 *  in the file PATENTS.  All contributing project authors may
 *  be found in the AUTHORS file in the root of the source tree.
 */
+
+/*
+ *  Modified by kimi.
+ *  This file is a modified replacement for
+ *  call/rtc_transport_controller_send.cc.
+ *
+ *  Distributed under the same BSD-style license as the original
+ *  WebRTC source code.
+ */
+
 #include <memory>
 #include <utility>
 #include <vector>

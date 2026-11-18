@@ -1,9 +1,21 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// author : kimi
-// desc   : replace to  /call/call_factory.h
-//
-//////////////////////////////////////////////////////////////////////////
+/*
+ *  Copyright (c) 2018 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
+
+/*
+ *  Modified by kimi.
+ *  This file is a modified replacement for
+ *  call/call_factory.h.
+ *
+ *  Distributed under the same BSD-style license as the original
+ *  WebRTC source code.
+ */
 
 
 #ifndef __RTC_CALL_CALL_FACTORY_H__

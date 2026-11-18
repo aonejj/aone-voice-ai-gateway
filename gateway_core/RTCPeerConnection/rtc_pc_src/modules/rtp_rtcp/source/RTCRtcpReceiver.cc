@@ -1,9 +1,3 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// author : kimi
-//
-//////////////////////////////////////////////////////////////////////////
-
 
 /*
 *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
@@ -14,6 +8,15 @@
 *  in the file PATENTS.  All contributing project authors may
 *  be found in the AUTHORS file in the root of the source tree.
 */
+
+/*
+ *  Modified by kimi.
+ *  This file is a modified replacement for
+ *  module/rtp_rtcp/source/rtcp_receiver.cc.
+ *
+ *  Distributed under the same BSD-style license as the original
+ *  WebRTC source code.
+ */
 
 #include "../rtc_pc_src/_deprecate_defines.h"
 

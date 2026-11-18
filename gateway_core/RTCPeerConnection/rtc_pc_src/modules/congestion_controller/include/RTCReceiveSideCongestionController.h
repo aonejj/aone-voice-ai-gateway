@@ -1,8 +1,21 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// author : kimi
-//
-//////////////////////////////////////////////////////////////////////////
+/*
+ *  Copyright (c) 2018 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
+
+/*
+ *  Modified by kimi.
+ *  This file is a modified replacement for
+ *  modules/congestion_controller/include/receive_side_congestion_controller.h.
+ *
+ *  Distributed under the same BSD-style license as the original
+ *  WebRTC source code.
+ */
 
 #ifndef __RTC_MODULES_CONGESTION_CONTROLLER_INCLUDE_RECEIVE_SIDE_CONGESTION_CONTOLLER_H__
 #define __RTC_MODULES_CONGESTION_CONTROLLER_INCLUDE_RECEIVE_SIDE_CONGESTION_CONTOLLER_H__

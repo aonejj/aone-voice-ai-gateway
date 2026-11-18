@@ -89,8 +89,6 @@ absl::optional<std::pair<int32_t, SdpAudioFormat>>
 }
 
 void RTCChannelRtpPacketReceiver::OnRtpPacket(const RtpPacketReceived& packet) {
-	int64_t debug_nowMs = rtc::TimeMillis();	// kimi
-
 	const auto& it = payload_type_frequencies_.find(packet.PayloadType());
 	if (it == payload_type_frequencies_.end())
 		return;
@@ -106,32 +104,9 @@ void RTCChannelRtpPacketReceiver::OnRtpPacket(const RtpPacketReceived& packet) {
 	}
 
 	rtp_receive_statistics_->OnRtpPacket(packet);
-
-	// for test
-	uint32_t abs_time = 0;
-	packet.GetExtension<AbsoluteSendTime>(&abs_time);
-	uint32_t timestamp = abs_time << kAbsSendTimeInterArrivalUpshift;
-	int64_t send_time_ms = static_cast<int64_t>(timestamp)* kTimestampToMs;
-	int64_t arrive_time_ms = packet.arrival_time_ms();
-
-#if 0
-	if (_debug_last_recvMs != -1ll) {
-		if ((send_time_ms - _debug_abs_ms) > 0) {
-// 			RTC_LOG(LS_INFO) << "kimi_audio_packet_jitter [" << this << "] RTCChannelRtpPacketReceiver::OnRtpPacket seq \t"<< packet.SequenceNumber() 
-// 				<<"\t abs_time \t"<< send_time_ms - _debug_abs_ms
-// 				<< "\t arrive_time \t" << arrive_time_ms - _debug_arrive_time_ms 
-// 				<< "\t interval ms \t" << debug_nowMs - _debug_last_recvMs;
-		}
-	}
-#endif
-
-	_debug_last_recvMs = debug_nowMs;
-	_debug_abs_ms = send_time_ms;
-	_debug_arrive_time_ms = arrive_time_ms;
 }
 
 void RTCChannelRtpPacketReceiver::ReceivedRTCPPacket(const uint8_t* data, size_t length) {
-//	RTC_LOG(LS_INFO) << "RTCChannelRtpPacketReceiver::ReceivedRTCPPacket thread id "<< pthread_self();
 	rtp_rtcp_->IncomingRtcpPacket(data, length);
 
 	absl::optional<TimeDelta> rtt = rtp_rtcp_->LastRtt();

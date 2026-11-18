@@ -4,7 +4,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-//#include "../rtc_pc_src/_deprecate_defines.h"
 
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"

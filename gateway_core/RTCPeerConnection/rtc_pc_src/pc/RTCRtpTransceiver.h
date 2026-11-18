@@ -1,9 +1,21 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// author : kimi
-// desc   : Replace RtpTransceiver to RTCRtpTransceiver class for rtc media server.
-//
-//////////////////////////////////////////////////////////////////////////
+/*
+*  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
+*
+*  Use of this source code is governed by a BSD-style license
+*  that can be found in the LICENSE file in the root of the source
+*  tree. An additional intellectual property rights grant can be found
+*  in the file PATENTS.  All contributing project authors may
+*  be found in the AUTHORS file in the root of the source tree.
+*/
+
+/*
+ *  Modified by kimi.
+ *  This file is a modified replacement for
+ *  pc/rtp_transceiver.h.
+ *
+ *  Distributed under the same BSD-style license as the original
+ *  WebRTC source code.
+ */
 
 #ifndef __RTC_RTP_TRANSCEIVER_H__
 #define __RTC_RTP_TRANSCEIVER_H__

@@ -1,13 +1,5 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// author : kimi
-// desc   : DataChannelController replace.
-//
-//////////////////////////////////////////////////////////////////////////
-
-
 /*
-*  Copyright 2019 The WebRTC project authors. All Rights Reserved.
+*  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
 *
 *  Use of this source code is governed by a BSD-style license
 *  that can be found in the LICENSE file in the root of the source
@@ -16,7 +8,14 @@
 *  be found in the AUTHORS file in the root of the source tree.
 */
 
-//#include "pc/data_channel_controller.h"
+/*
+ *  Modified by kimi.
+ *  This file is a modified replacement for
+ *  pc/data_channel_controller.cc.
+ *
+ *  Distributed under the same BSD-style license as the original
+ *  WebRTC source code.
+ */
 
 #include <algorithm>
 #include <utility>

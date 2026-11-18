@@ -54,18 +54,6 @@ config("RTCPeerConnectionLinkConfig") {
         "$root_out_dir",
     ]
 
-#    libs = [
-#        "absl_base",
-#        "absl_strings",
-#        "absl_strings_internal",
-#        "absl_bad_variant_access",
-#        "absl_bad_optional_access",
-#        "absl_throw_delegate",
-#        "ssl",
-#        "crypto",
-#        "usrsctp",
-#    ]
-
     libs = [
         rebase_path("./third_party/abseil/abseil-cpp/build_static/absl/base/libabsl_base.a", "."),
         rebase_path("./third_party/abseil/abseil-cpp/build_static/absl/base/libabsl_throw_delegate.a", "."),

@@ -8,9 +8,18 @@
 *  be found in the AUTHORS file in the root of the source tree.
 */
 
-#include <string.h>  // memcpy
+/*
+ *  Modified by kimi.
+ *  This file is a modified replacement for
+ *  module/rtp_rtcp/source/rtcp_sender.cc.
+ *
+ *  Distributed under the same BSD-style license as the original
+ *  WebRTC source code.
+ */
 
-#include <algorithm>  // std::min
+#include <string.h> 
+
+#include <algorithm> 
 #include <memory>
 #include <utility>
 

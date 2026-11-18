@@ -171,22 +171,6 @@ void RTCRemoteEstimatorProxy::OnBitrateChanged(int bitrate_bps) {
 	// TwccReport size at 50ms interval is 24 byte.
 	// TwccReport size at 250ms interval is 36 byte.
 	// AverageTwccReport = (TwccReport(50ms) + TwccReport(250ms)) / 2
-#if 0
-	constexpr int kTwccReportSize = 20 + 8 + 10 + 30;
-	const double kMinTwccRate =
-		kTwccReportSize * 8.0 * 1000.0 / max_interval_.ms();
-	const double kMaxTwccRate =
-		kTwccReportSize * 8.0 * 1000.0 / min_interval_.ms();
-
-	// Let TWCC reports occupy 5% of total bandwidth.
-#if 0	// kimi... source .... disable for test
-	MutexLock lock(&lock_);
-	send_interval_ms_ = static_cast<int>(
-		0.5 + kTwccReportSize * 8.0 * 1000.0 /
-		rtc::SafeClamp(bandwidth_fraction_ * bitrate_bps,
-		kMinTwccRate, kMaxTwccRate));
-#endif
-#endif
 
 	constexpr DataSize kTwccReportSize = DataSize::Bytes(20 + 8 + 10 + 30);
 	constexpr DataRate kMinTwccRate = kTwccReportSize / kMaxInterval;

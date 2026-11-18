@@ -1,8 +1,21 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// author : kimi
-//
-//////////////////////////////////////////////////////////////////////////
+/*
+ *  Copyright (c) 2018 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
+
+/*
+ *  Modified by kimi.
+ *  This file is a modified replacement for
+ *  modules/feedback/feedback_packet_router.cc.
+ *
+ *  Distributed under the same BSD-style license as the original
+ *  WebRTC source code.
+ */
 
 #include <algorithm>
 #include <limits>
@@ -159,30 +172,9 @@ bool RTCFeedbackPacketRouter::SendRemb(int64_t bitrate_bps,
 	return true;
 }
 
-// kimi ���� ����
 bool RTCFeedbackPacketRouter::SendCombinedRtcpPacket(
 	std::vector<std::unique_ptr<rtcp::RtcpPacket>> packets) {
 	MutexLock lock(&modules_mutex_);
-#if 0	// source  
-	// Prefer send modules.	// kimi....   // thinking....
-	for (RTCRtpRtcpInterface* rtp_module : send_modules_list_) {
-		if (rtp_module->RTCP() == RtcpMode::kOff) {
-			continue;
-		}
-		RTC_LOG(LS_VERBOSE) << "[" << this << "] fb_path_trace RTCFeedbackPacketRouter::SendCombinedRtcpPacket send_modules_list_ ssrc " << rtp_module->SSRC();
-		rtp_module->SendCombinedRtcpPacket(std::move(packets));
-		return true;
-	}
-
-	if (rtcp_feedback_senders_.empty()) {
-		return false;
-	}
-	auto* rtcp_sender = rtcp_feedback_senders_[0];
-	RTC_LOG(LS_VERBOSE) << "[" << this << "] fb_path_trace RTCFeedbackPacketRouter::SendCombinedRtcpPacket rtcp_sender";
-	rtcp_sender->SendCombinedRtcpPacket(std::move(packets));
-
-	return true;
-#else	// kimi replace
 	if (rtcp_feedback_senders_.empty()) {
 		for (RTCRtpRtcpInterface* rtp_module : send_modules_list_) {
 			if (rtp_module->RTCP() == RtcpMode::kOff) {
@@ -203,7 +195,6 @@ bool RTCFeedbackPacketRouter::SendCombinedRtcpPacket(
 	RTC_LOG(LS_INFO) << "[" << this << "] fb_path_trace RTCFeedbackPacketRouter::SendCombinedRtcpPacket rtcp_sender";
 	rtcp_sender->SendCombinedRtcpPacket(std::move(packets));
 	return true;
-#endif
 }
 
 void RTCFeedbackPacketRouter::AddRembModuleCandidate(

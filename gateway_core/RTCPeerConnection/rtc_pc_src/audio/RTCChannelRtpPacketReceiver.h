@@ -66,9 +66,6 @@ private:
 	// Indexed by payload type.
 	std::map<uint8_t, int> payload_type_frequencies_;
 
-	int64_t _debug_last_recvMs = -1ll;	
-	int64_t _debug_abs_ms;	
-	int64_t _debug_arrive_time_ms;
 	RTCPacketRouter* packet_router_ = nullptr;
 };
 
